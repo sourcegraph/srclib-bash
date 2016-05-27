@@ -99,8 +99,6 @@ func graphFile(name string, output *graph.Output) error {
 	}
 	defer f.Close()
 
-	var idents []string
-
 	sc := scanner.Scanner{
 		Mode: scanner.ScanIdents,
 	}
@@ -112,26 +110,24 @@ loop:
 		case scanner.EOF:
 			break loop
 		case scanner.Ident:
-			token := sc.TokenText()
+			ident := sc.TokenText()
 			// fmt.Fprintf(os.Stderr, "token: %s\n", token)
-			idents = append(idents, token)
+			output.Refs = append(output.Refs, makeRef(name, ident))
 		}
 	}
 
-	for _, ident := range idents {
-		output.Refs = append(output.Refs,
-			&graph.Ref{
-				DefUnitType: "BashDirectory",
-				DefUnit:     name,
-				DefPath:     name + "/" + ident,
-				UnitType:    "BashDirectory",
-				Def:         false,
-				File:        name,
-				Start:       0,
-				End:         0,
-			},
-		)
-	}
-
 	return nil
+}
+
+func makeRef(filename string, ident string) *graph.Ref {
+	return &graph.Ref{
+		DefUnitType: "BashDirectory",
+		DefUnit:     ident,
+		DefPath:     filename + "/" + ident,
+		UnitType:    "BashDirectory",
+		Def:         false,
+		File:        filename,
+		Start:       0,
+		End:         0,
+	}
 }
