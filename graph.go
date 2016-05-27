@@ -72,26 +72,6 @@ func (c *GraphCmd) Execute(args []string) error {
 		return fmt.Errorf("Failed to graph source units: %s", err)
 	}
 
-	// Make paths relative to repo.
-	for _, gs := range out.Defs {
-		if gs.File == "" {
-			log.Printf("no file %+v", gs)
-		}
-		if gs.File != "" {
-			gs.File = relPath(cwd, gs.File)
-		}
-	}
-	for _, gr := range out.Refs {
-		if gr.File != "" {
-			gr.File = relPath(cwd, gr.File)
-		}
-	}
-	for _, gd := range out.Docs {
-		if gd.File != "" {
-			gd.File = relPath(cwd, gd.File)
-		}
-	}
-
 	if err := json.NewEncoder(os.Stdout).Encode(out); err != nil {
 		return fmt.Errorf("Failed to output graph data: %s", err)
 	}
@@ -111,5 +91,28 @@ func graphUnits(units unit.SourceUnits) (*graph.Output, error) {
 }
 
 func graphFile(name string, output *graph.Output) error {
+	output.Defs = append(output.Defs,
+		&graph.Def{
+			DefKey: graph.DefKey{
+				Repo:     "repo",
+				CommitID: "commit",
+				UnitType: "BashDirectory",
+				Unit:     ".",
+				Path:     name,
+			},
+			Name:     name,
+			Kind:     "BashDef",
+			File:     name,
+			DefStart: 0,
+			DefEnd:   0,
+			Exported: true,
+			Local:    false,
+			Test:     false,
+			Data:     nil,
+			Docs:     nil,
+			TreePath: name,
+		},
+	)
+
 	return nil
 }
