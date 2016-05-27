@@ -111,15 +111,16 @@ loop:
 			break loop
 		case scanner.Ident:
 			ident := sc.TokenText()
-			// fmt.Fprintf(os.Stderr, "token: %s\n", token)
-			output.Refs = append(output.Refs, makeRef(name, ident))
+			offset := sc.Pos().Offset
+			// fmt.Fprintf(os.Stderr, "ident: \"%s\" at %d\n", ident, offset-len(ident))
+			output.Refs = append(output.Refs, makeRef(name, ident, offset))
 		}
 	}
 
 	return nil
 }
 
-func makeRef(filename string, ident string) *graph.Ref {
+func makeRef(filename string, ident string, offset int) *graph.Ref {
 	return &graph.Ref{
 		DefUnitType: "BashDirectory",
 		DefUnit:     ident,
@@ -127,7 +128,7 @@ func makeRef(filename string, ident string) *graph.Ref {
 		UnitType:    "BashDirectory",
 		Def:         false,
 		File:        filename,
-		Start:       0,
-		End:         0,
+		Start:       uint32(offset - len(ident)),
+		End:         uint32(offset),
 	}
 }
