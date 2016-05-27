@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"text/scanner"
 
 	"sourcegraph.com/sourcegraph/srclib/graph"
 	"sourcegraph.com/sourcegraph/srclib/unit"
@@ -91,28 +93,45 @@ func graphUnits(units unit.SourceUnits) (*graph.Output, error) {
 }
 
 func graphFile(name string, output *graph.Output) error {
-	output.Defs = append(output.Defs,
-		&graph.Def{
-			DefKey: graph.DefKey{
-				Repo:     "repo",
-				CommitID: "commit",
-				UnitType: "BashDirectory",
-				Unit:     ".",
-				Path:     name,
+	f, err := os.Open(name)
+	if err != nil {
+		return fmt.Errorf("Failed to open file %s: %s", name, err)
+	}
+	defer f.Close()
+
+	var idents []string
+
+	sc := scanner.Scanner{
+		Mode: scanner.ScanIdents,
+	}
+	sc.Init(bufio.NewReader(f))
+loop:
+	for {
+		r := sc.Scan()
+		switch r {
+		case scanner.EOF:
+			break loop
+		case scanner.Ident:
+			token := sc.TokenText()
+			// fmt.Fprintf(os.Stderr, "token: %s\n", token)
+			idents = append(idents, token)
+		}
+	}
+
+	for _, ident := range idents {
+		output.Refs = append(output.Refs,
+			&graph.Ref{
+				DefUnitType: "BashDirectory",
+				DefUnit:     name,
+				DefPath:     name + "/" + ident,
+				UnitType:    "BashDirectory",
+				Def:         false,
+				File:        name,
+				Start:       0,
+				End:         0,
 			},
-			Name:     name,
-			Kind:     "BashDef",
-			File:     name,
-			DefStart: 0,
-			DefEnd:   0,
-			Exported: true,
-			Local:    false,
-			Test:     false,
-			Data:     nil,
-			Docs:     nil,
-			TreePath: name,
-		},
-	)
+		)
+	}
 
 	return nil
 }

@@ -72,7 +72,7 @@ func scan(scanDir string) ([]*unit.SourceUnit, error) {
 
 	units = append(units, &unit.SourceUnit{
 		Key: unit.Key{
-			Name: ".",
+			Name: "bash",
 			Type: "BashDirectory",
 		},
 		Info: unit.Info{
