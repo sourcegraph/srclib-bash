@@ -54,10 +54,15 @@ func scan(scanDir string) ([]*unit.SourceUnit, error) {
 
 	err := filepath.Walk(scanDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("walking directory %s failed with: %s", scanDir, err)
 		}
+		// TODO(mate): implement a more sophisticated filter
 		if info.Mode().IsRegular() && filepath.Ext(path) == ".sh" {
-			files = append(files, path)
+			relpath, err := filepath.Rel(scanDir, path)
+			if err != nil {
+				return fmt.Errorf("making path %s relative to %s failed with: %s", path, scanDir, err)
+			}
+			files = append(files, relpath)
 		}
 		return nil
 	})
@@ -67,11 +72,10 @@ func scan(scanDir string) ([]*unit.SourceUnit, error) {
 
 	units = append(units, &unit.SourceUnit{
 		Key: unit.Key{
-			Name: scanDir,
+			Name: ".",
 			Type: "BashDirectory",
 		},
 		Info: unit.Info{
-			Dir:   scanDir,
 			Files: files,
 		},
 	})
