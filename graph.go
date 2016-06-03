@@ -11,7 +11,8 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-	"text/scanner"
+
+	"github.com/mkovacs/bash/scanner"
 
 	"sourcegraph.com/sourcegraph/srclib/graph"
 	"sourcegraph.com/sourcegraph/srclib/unit"
@@ -99,14 +100,15 @@ func graphFile(name string, output *graph.Output) error {
 	}
 	defer f.Close()
 
-	sc := scanner.Scanner{
-		Mode: scanner.ScanIdents,
-	}
+	sc := scanner.Scanner{}
 	sc.Init(bufio.NewReader(f))
 loop:
 	for {
-		r := sc.Scan()
-		switch r {
+		tok, err := sc.Scan()
+		if err != nil {
+			return fmt.Errorf("failed to scan for refs: %s", err)
+		}
+		switch tok {
 		case scanner.EOF:
 			break loop
 		case scanner.Ident:
