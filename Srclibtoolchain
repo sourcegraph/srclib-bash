@@ -13,20 +13,6 @@
       "SourceUnitTypes": [
         "BashDirectory"
       ]
-    },
-    {
-      "Subcmd": "depresolve",
-      "Op": "depresolve",
-      "SourceUnitTypes": [
-        "BashDirectory"
-      ]
-    },
-    {
-      "Subcmd": "fmt",
-      "Op": "fmt",
-      "SourceUnitTypes": [
-        "BashDirectory"
-      ]
     }
   ],
   "Bundle": {
@@ -34,14 +20,6 @@
 		"Srclibtoolchain",
 		".bin",
 		".bin/srclib-bash"
-	],
-    "Commands": [
-		"mkdir -p .bin",
-		"GOPATH=go get github.com/kardianos/govendor && govendor sync && go build -o .bin/srclib-bash"
-	],
-    "Variants": [
-		{"GOOS": "linux", "GOARCH": "amd64"},
-		{"GOOS": "darwin", "GOARCH": "amd64"}
 	]
   }
 }
