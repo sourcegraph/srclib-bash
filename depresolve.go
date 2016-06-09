@@ -13,7 +13,7 @@ import (
 func init() {
 	_, err := flagParser.AddCommand("depresolve",
 		"resolve a Bash script's imports",
-		"Performs no operation, provided for compatibility.",
+		"Lists the man page repository as a dependency.",
 		&depResolveCmd,
 	)
 	if err != nil {
@@ -34,8 +34,17 @@ func (c *DepResolveCmd) Execute(args []string) error {
 		return fmt.Errorf("closing STDIN failed with: %s", err)
 	}
 
-	// NOTE(mate): intentionally empty (at least for now)
 	var resolutions []*dep.Resolution
+	if len(unit.Files) > 0 {
+		res := &dep.Resolution{
+			Target: &dep.ResolvedTarget{
+				ToRepoCloneURL: "github.com/sourcegraph/man-pages-posix",
+				ToUnitType:     "ManPages",
+				ToUnit:         "man",
+			},
+		}
+		resolutions = append(resolutions, res)
+	}
 
 	bytes, err := json.MarshalIndent(resolutions, "", "  ")
 	if err != nil {
