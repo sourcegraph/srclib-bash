@@ -102,18 +102,14 @@ func graphFile(name string, output *graph.Output) error {
 
 	sc := scanner.Scanner{}
 	sc.Init(bufio.NewReader(f))
-	prevTok := scanner.Nothing
-	prevIdent := ""
-loop:
 	for {
 		tok, err := sc.Scan()
 		if err != nil {
 			return fmt.Errorf("failed to scan for identifiers: %s", err)
 		}
-		switch tok {
-		case scanner.EOF:
-			break loop
-		case scanner.Ident:
+		if tok == scanner.EOF {
+			break
+		} else if tok == scanner.Ident {
 			ident := sc.TokenText()
 			offset := sc.Pos().Offset
 			// fmt.Fprintf(os.Stderr, "ident: \"%s\" at %d\n", ident, offset-len(ident))
@@ -125,68 +121,11 @@ loop:
 					return fmt.Errorf("failed to create command ref: %s", err)
 				}
 				output.Refs = append(output.Refs, ref)
-			} else {
-				// possible def and ref to user-defined function
-				isDef := false
-				if prevTok == scanner.Ident && prevIdent == "function" {
-					def, err := makeDef(name, ident, offset)
-					if err != nil {
-						return fmt.Errorf("failed to create def: %s", err)
-					}
-					output.Defs = append(output.Defs, def)
-					isDef = true
-				}
-				ref, err := makeRef(name, ident, offset, isDef)
-				if err != nil {
-					return fmt.Errorf("failed to create ref: %s", err)
-				}
-				output.Refs = append(output.Refs, ref)
 			}
-			prevTok = tok
-			prevIdent = ident
 		}
 	}
 
 	return nil
-}
-
-func makeRef(filename string, ident string, offset int, isDef bool) (*graph.Ref, error) {
-	return &graph.Ref{
-		DefUnitType: "BashDirectory",
-		DefUnit:     "bash",
-		DefPath:     filename + "/" + ident,
-		UnitType:    "BashDirectory",
-		Unit:        "bash",
-		Def:         isDef,
-		File:        filename,
-		Start:       uint32(offset - len(ident)),
-		End:         uint32(offset),
-	}, nil
-}
-
-func makeDef(filename string, ident string, offset int) (*graph.Def, error) {
-	data, err := json.Marshal(DefData{
-		Name:    ident,
-		Keyword: "function",
-		Kind:    "function",
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &graph.Def{
-		DefKey: graph.DefKey{
-			UnitType: "BashDirectory",
-			Unit:     "bash",
-			Path:     filename + "/" + ident,
-		},
-		Exported: true,
-		Data:     data,
-		Name:     ident,
-		Kind:     "function",
-		File:     filename,
-		DefStart: uint32(offset - len(ident)),
-		DefEnd:   uint32(offset),
-	}, nil
 }
 
 func makeCommandRef(filename string, command string, page string, offset int) (*graph.Ref, error) {
