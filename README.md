@@ -37,6 +37,10 @@ You should see this srclib-bash toolchain in the list.
 
 Now that this toolchain is installed, any program that relies on srclib will support Bash.
 
+## Limitations
+
+* Only [POSIX](https://en.wikipedia.org/wiki/POSIX) commands are supported.
+
 ## Known issues
 
 srclib-bash is alpha-quality software. It powers code analysis on
