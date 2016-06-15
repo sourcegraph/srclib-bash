@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"sourcegraph.com/sourcegraph/srclib/unit"
 )
@@ -57,7 +58,8 @@ func scan(scanDir string) ([]*unit.SourceUnit, error) {
 			return fmt.Errorf("walking directory %s failed with: %s", scanDir, err)
 		}
 		// TODO(mate): implement a more sophisticated filter
-		if info.Mode().IsRegular() && filepath.Ext(path) == ".sh" {
+		_, name := filepath.Split(path)
+		if info.Mode().IsRegular() && (strings.HasSuffix(name, ".sh") || strings.HasSuffix(name, ".bash")) {
 			relpath, err := filepath.Rel(scanDir, path)
 			if err != nil {
 				return fmt.Errorf("making path %s relative to %s failed with: %s", path, scanDir, err)
